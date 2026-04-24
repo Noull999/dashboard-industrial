@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Industrial — Diagrama de Flujo</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { background:#050505; color:#fff; font-family:'Segoe UI',system-ui,sans-serif; min-height:100vh; padding:40px; }
+
+  h1 { font-size:20px; font-weight:700; color:#fff; margin-bottom:6px; letter-spacing:.5px; }
+  .subtitle { color:#444; font-size:12px; margin-bottom:48px; }
+
+  .diagram { display:flex; flex-direction:column; align-items:center; gap:0; max-width:900px; margin:0 auto; }
+
+  /* ── Rows ── */
+  .row { display:flex; align-items:center; justify-content:center; gap:0; width:100%; }
+  .row-center { display:flex; flex-direction:column; align-items:center; gap:0; }
+
+  /* ── Boxes ── */
+  .box { border-radius:8px; padding:14px 20px; text-align:center; position:relative; }
+  .box-title { font-size:11px; font-weight:700; letter-spacing:1px; text-transform:uppercase; }
+  .box-sub { font-size:10px; margin-top:4px; opacity:.6; line-height:1.4; }
+
+  .box-sensor { background:#0d0d0d; border:1px solid #1e1e1e; min-width:130px; }
+  .box-simulator { background:#0a0a0a; border:1px solid #e63946; min-width:160px; }
+  .box-fastapi { background:#0a0a0a; border:2px solid #e63946; min-width:180px; padding:18px 24px; }
+  .box-sqlite { background:#0a0a0a; border:1px solid #333; min-width:160px; }
+  .box-ws { background:#0d0d0d; border:1px solid #444; min-width:140px; }
+  .box-react { background:#0a0a0a; border:2px solid #fff; min-width:180px; padding:18px 24px; }
+  .box-component { background:#0d0d0d; border:1px solid #333; min-width:120px; }
+  .box-db-table { background:#0a0a0a; border:1px solid #2a2a2a; min-width:130px; padding:10px 14px; }
+
+  .label-red { color:#e63946; }
+  .label-white { color:#fff; }
+  .label-gray { color:#888; }
+  .label-green { color:#22c55e; }
+
+  /* ── Arrows ── */
+  .arrow-down { display:flex; flex-direction:column; align-items:center; margin:0; }
+  .arrow-line { width:2px; height:32px; background:#333; }
+  .arrow-head { width:0; height:0; border-left:6px solid transparent; border-right:6px solid transparent; border-top:8px solid #333; }
+  .arrow-line-red { background:#e63946; }
+  .arrow-head-red { border-top-color:#e63946; }
+
+  .arrow-right { display:flex; align-items:center; margin:0; }
+  .arrow-hline { height:2px; width:32px; background:#333; }
+  .arrow-hhead { width:0; height:0; border-top:6px solid transparent; border-bottom:6px solid transparent; border-left:8px solid #333; }
+  .arrow-hline-red { background:#e63946; }
+  .arrow-hhead-red { border-left-color:#e63946; }
+
+  /* sensor cluster */
+  .sensor-cluster { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; }
+  .sensor-mini { background:#0d0d0d; border:1px solid #1e1e1e; border-radius:6px; padding:8px 12px; text-align:center; }
+  .sensor-mini-name { font-size:9px; color:#555; letter-spacing:.5px; margin-bottom:4px; }
+  .sensor-mini-val { font-size:12px; font-weight:700; }
+
+  /* section labels */
+  .section-strip { width:100%; max-width:900px; margin:0 auto 12px; }
+  .section-label { color:#444; font-size:9px; letter-spacing:2px; text-transform:uppercase; border-bottom:1px solid #111; padding-bottom:6px; margin-bottom:0; }
+
+  /* legend */
+  .legend { display:flex; gap:24px; margin:48px auto 0; max-width:900px; flex-wrap:wrap; }
+  .legend-item { display:flex; align-items:center; gap:8px; }
+  .legend-dot { width:10px; height:10px; border-radius:2px; }
+  .legend-text { color:#555; font-size:10px; }
+
+  /* db tables row */
+  .db-tables { display:flex; gap:10px; flex-wrap:wrap; justify-content:center; }
+
+  /* annotation */
+  .annotation { font-size:9px; color:#444; margin-top:4px; letter-spacing:.3px; }
+
+  /* two-col layout for middle section */
+  .middle { display:flex; gap:60px; align-items:flex-start; justify-content:center; width:100%; max-width:900px; margin:0 auto; }
+  .middle-col { display:flex; flex-direction:column; align-items:center; gap:0; }
+  .middle-label { color:#444; font-size:9px; letter-spacing:1.5px; text-transform:uppercase; margin-bottom:12px; text-align:center; }
+</style>
+</head>
+<body>
+
+<h1>Dashboard Industrial Pesquero — Diagrama de Flujo</h1>
+<p class="subtitle">Arquitectura del sistema · Puerto Madryn · Prototipo v1</p>
+
+<!-- SENSORES -->
+<div class="section-strip"><div class="section-label">1 · Sensores simulados (Python)</div></div>
+<div style="max-width:900px;margin:0 auto 0;">
+  <div class="sensor-cluster">
+    <div class="sensor-mini"><div class="sensor-mini-name">Cámara Frig. 1 & 2</div><div class="sensor-mini-val label-red">°C</div></div>
+    <div class="sensor-mini"><div class="sensor-mini-name">Humedad Sala</div><div class="sensor-mini-val label-white">%</div></div>
+    <div class="sensor-mini"><div class="sensor-mini-name">Presión NH₃</div><div class="sensor-mini-val label-white">bar</div></div>
+    <div class="sensor-mini"><div class="sensor-mini-name">Bandas Trans. 1 & 2</div><div class="sensor-mini-val label-white">RPM</div></div>
+    <div class="sensor-mini"><div class="sensor-mini-name">Peso Tolva A</div><div class="sensor-mini-val label-white">t</div></div>
+    <div class="sensor-mini"><div class="sensor-mini-name">Nivel Salmuera</div><div class="sensor-mini-val label-white">%</div></div>
+    <div class="sensor-mini"><div class="sensor-mini-name">Caudal Agua</div><div class="sensor-mini-val label-white">L/h</div></div>
+    <div class="sensor-mini"><div class="sensor-mini-name">Línea Producción 1</div><div class="sensor-mini-val label-green">kg/min</div></div>
+    <div class="sensor-mini"><div class="sensor-mini-name">Línea Producción 2</div><div class="sensor-mini-val label-green">kg/min</div></div>
+  </div>
+</div>
+
+<div style="max-width:900px;margin:0 auto;">
+  <div class="arrow-down" style="margin:0 auto"><div class="arrow-line arrow-line-red"></div><div class="arrow-head arrow-head-red"></div></div>
+</div>
+
+<!-- SIMULADOR -->
+<div class="section-strip" style="margin-top:12px;"><div class="section-label">2 · Simulador (simulator.py) — genera lectura cada 5s</div></div>
+<div style="max-width:900px;margin:0 auto;">
+  <div style="display:flex;align-items:center;justify-content:center;gap:32px;">
+    <div class="box box-simulator">
+      <div class="box-title label-red">SensorSimulator</div>
+      <div class="box-sub">Genera valor aleatorio<br>Detecta si supera límite<br>Crea alerta si corresponde</div>
+    </div>
+  </div>
+</div>
+
+<div style="max-width:900px;margin:0 auto;">
+  <div class="arrow-down" style="margin:0 auto"><div class="arrow-line arrow-line-red"></div><div class="arrow-head arrow-head-red"></div></div>
+</div>
+
+<!-- FASTAPI -->
+<div class="section-strip" style="margin-top:12px;"><div class="section-label">3 · Backend (FastAPI)</div></div>
+<div style="max-width:900px;margin:0 auto;">
+  <div style="display:flex;align-items:flex-start;justify-content:center;gap:40px;">
+
+    <!-- FastAPI central -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:0;">
+      <div class="box box-fastapi">
+        <div class="box-title label-red">FastAPI</div>
+        <div class="box-sub">
+          <span style="color:#fff">WS</span> /ws · broadcast en vivo<br>
+          <span style="color:#fff">GET</span> /sensors<br>
+          <span style="color:#fff">GET</span> /sensors/{id}/history<br>
+          <span style="color:#fff">GET</span> /alerts<br>
+          <span style="color:#fff">POST</span> /sensors/{id}/product
+        </div>
+      </div>
+
+      <div class="arrow-down"><div class="arrow-line"></div><div class="arrow-head"></div></div>
+
+      <!-- SQLite -->
+      <div class="box box-sqlite">
+        <div class="box-title label-gray">SQLite</div>
+        <div class="box-sub">readings.db</div>
+      </div>
+      <div style="margin-top:10px;">
+        <div class="db-tables">
+          <div class="box-db-table"><div style="color:#555;font-size:9px;letter-spacing:.5px">sensors</div><div style="color:#aaa;font-size:9px;margin-top:2px">catálogo</div></div>
+          <div class="box-db-table"><div style="color:#555;font-size:9px;letter-spacing:.5px">readings</div><div style="color:#aaa;font-size:9px;margin-top:2px">historial</div></div>
+          <div class="box-db-table"><div style="color:#555;font-size:9px;letter-spacing:.5px">alerts</div><div style="color:#aaa;font-size:9px;margin-top:2px">log alertas</div></div>
+          <div class="box-db-table"><div style="color:#555;font-size:9px;letter-spacing:.5px">product_changes</div><div style="color:#aaa;font-size:9px;margin-top:2px">cambios especie</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Arrows to React -->
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:16px;margin-top:30px;">
+      <div style="text-align:center;">
+        <div style="color:#e63946;font-size:9px;letter-spacing:1px;margin-bottom:4px;">WS — cada 5s</div>
+        <div class="arrow-right"><div class="arrow-hline arrow-hline-red" style="width:60px;"></div><div class="arrow-hhead arrow-hhead-red"></div></div>
+      </div>
+      <div style="text-align:center;">
+        <div style="color:#888;font-size:9px;letter-spacing:1px;margin-bottom:4px;">REST — on demand</div>
+        <div class="arrow-right"><div class="arrow-hline" style="width:60px;"></div><div class="arrow-hhead"></div></div>
+      </div>
+    </div>
+
+    <!-- React -->
+    <div style="display:flex;flex-direction:column;align-items:center;gap:0;margin-top:0;">
+      <div class="box box-react" style="margin-bottom:0;">
+        <div class="box-title label-white">React + Vite</div>
+        <div class="box-sub">
+          useWebSocket → datos live<br>
+          useSensorHistory → historial
+        </div>
+      </div>
+      <div class="arrow-down"><div class="arrow-line"></div><div class="arrow-head"></div></div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:0;">
+        <div class="box box-component"><div style="font-size:9px;color:#888;">SensorCard</div><div style="font-size:9px;color:#555;margin-top:2px;">valor + sparkline</div></div>
+        <div class="box box-component"><div style="font-size:9px;color:#888;">SensorDrawer</div><div style="font-size:9px;color:#555;margin-top:2px;">detalle + chart</div></div>
+        <div class="box box-component"><div style="font-size:9px;color:#e63946;">AlertBar</div><div style="font-size:9px;color:#555;margin-top:2px;">alerta activa</div></div>
+        <div class="box box-component"><div style="font-size:9px;color:#22c55e;">ProductionTotal</div><div style="font-size:9px;color:#555;margin-top:2px;">total del día</div></div>
+        <div class="box box-component" style="grid-column:span 2;"><div style="font-size:9px;color:#888;">ProductSelector</div><div style="font-size:9px;color:#555;margin-top:2px;">especie por línea</div></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- FLUJO DE ALERTA -->
+<div style="max-width:900px;margin:40px auto 0;">
+  <div class="section-label" style="margin-bottom:16px;">4 · Flujo de alerta</div>
+  <div style="display:flex;align-items:center;gap:0;flex-wrap:wrap;justify-content:center;">
+
+    <div class="box" style="background:#0d0d0d;border:1px solid #1e1e1e;min-width:120px;">
+      <div style="font-size:10px;color:#888;">Lectura generada</div>
+    </div>
+    <div class="arrow-right"><div class="arrow-hline" style="width:20px;"></div><div class="arrow-hhead"></div></div>
+
+    <div class="box" style="background:#0d0d0d;border:1px solid #333;min-width:140px;">
+      <div style="font-size:10px;color:#888;">¿Supera el límite?</div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px;margin:0 8px;">
+      <div style="display:flex;align-items:center;gap:4px;">
+        <div style="color:#22c55e;font-size:9px;letter-spacing:.5px;">NO →</div>
+        <div class="box" style="background:#0a1a0a;border:1px solid #166534;padding:6px 12px;">
+          <div style="font-size:9px;color:#22c55e;">Estado NORMAL</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:4px;">
+        <div style="color:#e63946;font-size:9px;letter-spacing:.5px;">SÍ →</div>
+        <div class="box" style="background:#1a0505;border:1px solid #7f1d1d;padding:6px 12px;">
+          <div style="font-size:9px;color:#e63946;">Crea alerta en DB</div>
+        </div>
+        <div class="arrow-right"><div class="arrow-hline arrow-hline-red" style="width:16px;"></div><div class="arrow-hhead arrow-hhead-red"></div></div>
+        <div class="box" style="background:#1a0505;border:1px solid #7f1d1d;padding:6px 12px;">
+          <div style="font-size:9px;color:#e63946;">AlertBar visible</div>
+          <div style="font-size:8px;color:#666;margin-top:2px;">en todos los clientes</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- RECONEXIÓN WS -->
+<div style="max-width:900px;margin:32px auto 0;">
+  <div class="section-label" style="margin-bottom:16px;">5 · Reconexión WebSocket (cliente)</div>
+  <div style="display:flex;align-items:center;gap:0;flex-wrap:wrap;justify-content:center;">
+    <div class="box" style="background:#0d0d0d;border:1px solid #1e1e1e;padding:10px 16px;">
+      <div style="font-size:10px;color:#888;">WS conectado</div>
+    </div>
+    <div class="arrow-right"><div class="arrow-hline" style="width:20px;"></div><div class="arrow-hhead"></div></div>
+    <div class="box" style="background:#0d0d0d;border:1px solid #333;padding:10px 16px;">
+      <div style="font-size:10px;color:#888;">¿Se cae?</div>
+    </div>
+    <div class="arrow-right"><div class="arrow-hline arrow-hline-red" style="width:20px;"></div><div class="arrow-hhead arrow-hhead-red"></div></div>
+    <div class="box" style="background:#1a0505;border:1px solid #7f1d1d;padding:10px 16px;">
+      <div style="font-size:10px;color:#e63946;">Backoff 1s→2s→4s</div>
+    </div>
+    <div class="arrow-right"><div class="arrow-hline" style="width:20px;"></div><div class="arrow-hhead"></div></div>
+    <div class="box" style="background:#0a1a0a;border:1px solid #166534;padding:10px 16px;">
+      <div style="font-size:10px;color:#22c55e;">Reconectado</div>
+    </div>
+  </div>
+  <div style="text-align:center;margin-top:10px;color:#444;font-size:10px;">Sensor sin datos por más de 15s → card muestra OFFLINE en gris</div>
+</div>
+
+<!-- Legend -->
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#e63946;"></div><div class="legend-text">Flujo de alerta / componentes críticos</div></div>
+  <div class="legend-item"><div class="legend-dot" style="background:#fff;"></div><div class="legend-text">Frontend React</div></div>
+  <div class="legend-item"><div class="legend-dot" style="background:#22c55e;"></div><div class="legend-text">Estado normal / OK</div></div>
+  <div class="legend-item"><div class="legend-dot" style="background:#444;"></div><div class="legend-text">Flujo de datos general</div></div>
+</div>
+
+<div style="max-width:900px;margin:32px auto 0;color:#222;font-size:10px;text-align:center;">
+  Dashboard Industrial Pesquero · Puerto Madryn · Diseño 2026-04-24
+</div>
+
+</body>
+</html>
