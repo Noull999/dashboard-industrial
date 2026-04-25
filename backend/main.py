@@ -21,7 +21,7 @@ connected_clients: list[WebSocket] = []
 
 async def broadcast(payload: dict[str, Any]) -> None:
     dead = []
-    for ws in connected_clients:
+    for ws in list(connected_clients):
         try:
             await ws.send_text(json.dumps(payload))
         except Exception:
@@ -61,7 +61,9 @@ async def websocket_endpoint(websocket: WebSocket):
     try:
         while True:
             await websocket.receive_text()
-    except WebSocketDisconnect:
+    except Exception:
+        pass
+    finally:
         if websocket in connected_clients:
             connected_clients.remove(websocket)
 

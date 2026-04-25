@@ -1,4 +1,5 @@
 import asyncio
+import logging
 import random
 from datetime import datetime, timezone
 from typing import Callable, Awaitable, Any
@@ -67,13 +68,14 @@ class SensorSimulator:
                         db.add(reading)
                         db.commit()
                         alert = check_and_save_alert(db, config.id, value, config.min_val, config.max_val, config.name)
+                        ts = reading.timestamp
                     finally:
                         db.close()
 
                     payload: dict[str, Any] = {
                         "sensor_id": config.id,
                         "value": value,
-                        "timestamp": reading.timestamp.isoformat(),
+                        "timestamp": ts.isoformat(),
                         "alert": alert is not None,
                     }
                     for cb in self._callbacks:
@@ -81,7 +83,8 @@ class SensorSimulator:
                             await cb(payload)
                         except Exception:
                             pass
-            except Exception:
+            except Exception as exc:
+                logging.exception("Simulator loop error: %s", exc)
                 await asyncio.sleep(1)
 
             await asyncio.sleep(5)
