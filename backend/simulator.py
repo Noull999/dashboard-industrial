@@ -13,6 +13,9 @@ def generate_value(config: SensorConfig, previous: float | None = None) -> float
     new_val = base + random.uniform(-spread, spread)
     hard_min = config.min_val - (config.max_val - config.min_val) * 0.2
     hard_max = config.max_val + (config.max_val - config.min_val) * 0.2
+    # Only enforce non-negative if the sensor's natural min is non-negative
+    if config.min_val >= 0:
+        hard_min = max(0.0, hard_min)
     return round(max(hard_min, min(hard_max, new_val)), 2)
 
 
@@ -45,35 +48,41 @@ class SensorSimulator:
     def add_callback(self, cb: Callback) -> None:
         self._callbacks.append(cb)
 
-    async def run(self, session_factory) -> None:
+    async def run(self, session_factory: Callable[[], Session]) -> None:
         self._running = True
         while self._running:
-            for config in SENSORS:
-                prev = self._values.get(config.id)
-                value = generate_value(config, prev)
-                self._values[config.id] = value
+            try:
+                for config in SENSORS:
+                    prev = self._values.get(config.id)
+                    value = generate_value(config, prev)
+                    self._values[config.id] = value
 
-                db = session_factory()
-                try:
-                    reading = Reading(
-                        sensor_id=config.id,
-                        value=value,
-                        timestamp=datetime.now(timezone.utc),
-                    )
-                    db.add(reading)
-                    db.commit()
-                    alert = check_and_save_alert(db, config.id, value, config.min_val, config.max_val, config.name)
-                finally:
-                    db.close()
+                    db = session_factory()
+                    try:
+                        reading = Reading(
+                            sensor_id=config.id,
+                            value=value,
+                            timestamp=datetime.now(timezone.utc),
+                        )
+                        db.add(reading)
+                        db.commit()
+                        alert = check_and_save_alert(db, config.id, value, config.min_val, config.max_val, config.name)
+                    finally:
+                        db.close()
 
-                payload: dict[str, Any] = {
-                    "sensor_id": config.id,
-                    "value": value,
-                    "timestamp": reading.timestamp.isoformat(),
-                    "alert": alert is not None,
-                }
-                for cb in self._callbacks:
-                    await cb(payload)
+                    payload: dict[str, Any] = {
+                        "sensor_id": config.id,
+                        "value": value,
+                        "timestamp": reading.timestamp.isoformat(),
+                        "alert": alert is not None,
+                    }
+                    for cb in self._callbacks:
+                        try:
+                            await cb(payload)
+                        except Exception:
+                            pass
+            except Exception:
+                await asyncio.sleep(1)
 
             await asyncio.sleep(5)
 

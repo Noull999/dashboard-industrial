@@ -18,7 +18,7 @@ def test_generate_value_walks_from_previous():
     prev = -7.0
     for _ in range(200):
         v = generate_value(TEMP_SENSOR, prev)
-        assert abs(v - prev) <= spread * 2 + 0.01, f"Step too large: {abs(v - prev)}"
+        assert abs(v - prev) <= spread + 0.01, f"Step too large: {abs(v - prev)}"
         prev = v
 
 
