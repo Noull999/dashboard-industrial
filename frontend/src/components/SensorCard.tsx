@@ -38,10 +38,23 @@ function Sparkline({ values, color, minVal, maxVal }: { values: number[]; color:
     <svg
       viewBox={`0 0 ${W} ${H}`}
       preserveAspectRatio="none"
-      style={{ width: '100%', height: 28, display: 'block', opacity: 0.7 }}
+      style={{ width: '100%', height: 28, display: 'block', opacity: 0.65 }}
     >
       <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
     </svg>
+  );
+}
+
+function RangeBar({ value, minVal, maxVal, color }: { value: number; minVal: number; maxVal: number; color: string }) {
+  const pct = Math.min(100, Math.max(0, ((value - minVal) / (maxVal - minVal)) * 100));
+  return (
+    <div style={{ height: 2, background: 'var(--border)', borderRadius: 1, overflow: 'hidden', marginTop: 4 }}>
+      <div style={{
+        width: `${pct}%`, height: '100%',
+        background: color, borderRadius: 1,
+        transition: 'width 0.4s ease',
+      }} />
+    </div>
   );
 }
 
@@ -53,32 +66,61 @@ export default function SensorCard({ meta, reading, lastSeen, history, onClick }
     : getSensorStatus(reading!.value, meta.min_val, meta.max_val);
   const color = STATUS_COLORS[status];
 
-  return (
-    <div onClick={onClick} style={{
-      background: status === 'alert' ? '#0d0808' : 'var(--surface)',
-      border: `1px solid ${status === 'alert' ? 'var(--red-dim)' : 'var(--border)'}`,
-      borderRadius: 8,
-      padding: '14px 16px 10px',
-      cursor: 'pointer',
-      position: 'relative',
-      overflow: 'hidden',
-    }}>
-      {/* Top accent bar */}
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: color }} />
+  const isAlert = status === 'alert';
 
-      <div style={{ color: 'var(--text-3)', fontSize: 9, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 8 }}>
+  return (
+    <div
+      onClick={onClick}
+      style={{
+        background: isAlert ? '#0d0808' : 'var(--surface)',
+        border: `1px solid ${isAlert ? 'var(--red-dim)' : 'var(--border)'}`,
+        borderRadius: 8,
+        padding: '14px 16px 10px',
+        cursor: 'pointer',
+        position: 'relative',
+        overflow: 'hidden',
+        transition: 'border-color 0.3s, background 0.3s',
+        animation: isAlert ? 'alertPulse 2s infinite' : undefined,
+      }}
+    >
+      {/* Top accent bar */}
+      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 2, background: color, transition: 'background 0.3s' }} />
+
+      {/* Sensor name */}
+      <div style={{
+        color: 'var(--text-3)', fontSize: 9, letterSpacing: 1.2,
+        textTransform: 'uppercase', marginBottom: 8, fontWeight: 600,
+      }}>
         {meta.name}
       </div>
 
-      <div style={{ fontSize: 26, fontWeight: 700, lineHeight: 1, letterSpacing: -1, color: isOffline ? '#555' : undefined }}>
-        {reading ? reading.value.toFixed(1) : '—'}
-        <span style={{ fontSize: 13, color: 'var(--text-3)', fontWeight: 400, marginLeft: 4 }}>{meta.unit}</span>
+      {/* Value — key change triggers numFlash animation */}
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 4 }}>
+        <span
+          key={reading?.value.toFixed(2)}
+          style={{
+            fontFamily: 'var(--font-mono)',
+            fontSize: 28, fontWeight: 700, lineHeight: 1, letterSpacing: -1,
+            color: isOffline ? '#555' : color,
+            animation: reading && !isOffline ? 'numFlash 0.3s ease-out' : undefined,
+          }}
+        >
+          {reading ? reading.value.toFixed(1) : '—'}
+        </span>
+        <span style={{ fontSize: 11, color: 'var(--text-3)', fontWeight: 400 }}>{meta.unit}</span>
       </div>
 
-      <div style={{ marginTop: 8, marginBottom: 6, fontSize: 9, fontWeight: 700, color, letterSpacing: 0.5 }}>
+      {/* Range bar */}
+      {reading && !isOffline && (
+        <RangeBar value={reading.value} minVal={meta.min_val} maxVal={meta.max_val} color={color} />
+      )}
+
+      {/* Status label */}
+      <div style={{ marginTop: 8, marginBottom: 4, fontSize: 9, fontWeight: 700, color, letterSpacing: 0.5 }}>
         {STATUS_LABELS[status]}
       </div>
 
+      {/* Sparkline */}
       <Sparkline values={history} color={color} minVal={meta.min_val} maxVal={meta.max_val} />
     </div>
   );

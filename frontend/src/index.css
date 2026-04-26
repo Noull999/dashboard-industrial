@@ -18,12 +18,17 @@
   --text-2:    #888888;
   --text-3:    #444444;
   --text-4:    #333333;
+
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  --font-ui:   'Space Grotesk', 'Segoe UI', system-ui, sans-serif;
 }
 
 body {
-  background: var(--bg);
+  background-color: var(--bg);
+  background-image: radial-gradient(circle, rgba(255,255,255,0.025) 1px, transparent 1px);
+  background-size: 24px 24px;
   color: var(--text);
-  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-family: var(--font-ui);
   font-size: 13px;
   line-height: 1.4;
   height: 100vh;
@@ -39,4 +44,71 @@ body {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50%       { opacity: 0.55; }
+}
+
+/* Flash on new reading — triggered by key change */
+@keyframes numFlash {
+  0%   { opacity: 0.4; }
+  100% { opacity: 1; }
+}
+
+/* Alert card pulse */
+@keyframes alertPulse {
+  0%, 100% { border-color: var(--red-dim); }
+  50%       { border-color: var(--red); }
+}
+
+/* Sidebar CSS tooltips */
+.nav-tip {
+  position: relative;
+}
+.nav-tip::after {
+  content: attr(data-label);
+  position: absolute;
+  left: calc(100% + 12px);
+  top: 50%;
+  transform: translateY(-50%);
+  background: #141414;
+  border: 1px solid var(--border-2);
+  color: var(--text);
+  font-size: 11px;
+  font-family: var(--font-ui);
+  white-space: nowrap;
+  padding: 5px 12px;
+  border-radius: 5px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s, transform 0.15s;
+  z-index: 200;
+  letter-spacing: 0.3px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.6);
+}
+.nav-tip::before {
+  content: '';
+  position: absolute;
+  left: calc(100% + 6px);
+  top: 50%;
+  transform: translateY(-50%);
+  border: 5px solid transparent;
+  border-right-color: var(--border-2);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.15s;
+  z-index: 200;
+}
+.nav-tip:hover::after,
+.nav-tip:hover::before {
+  opacity: 1;
+}
+
+/* Skeleton shimmer */
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--surface) 25%, #141414 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s infinite;
+  border-radius: 8px;
 }

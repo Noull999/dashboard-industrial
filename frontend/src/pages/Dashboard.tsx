@@ -73,14 +73,18 @@ export default function Dashboard() {
     <div style={{ display: 'flex', height: '100vh' }}>
       {/* Sidebar */}
       <nav style={{
-        width: 56, background: '#0a0a0a', borderRight: '1px solid var(--border)',
+        width: 56, background: '#080808', borderRight: '1px solid var(--border)',
         display: 'flex', flexDirection: 'column', alignItems: 'center',
-        padding: '16px 0', gap: 8, flexShrink: 0,
+        padding: '16px 0', gap: 4, flexShrink: 0,
+        position: 'relative', zIndex: 10,
       }}>
+        {/* Logo mark */}
         <div style={{
-          width: 32, height: 32, background: 'var(--red)', borderRadius: 6,
+          width: 34, height: 34, background: 'var(--red)', borderRadius: 7,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
-          fontWeight: 900, fontSize: 14, marginBottom: 16,
+          fontFamily: 'var(--font-mono)', fontWeight: 700, fontSize: 12,
+          letterSpacing: -0.5, marginBottom: 20, flexShrink: 0,
+          boxShadow: '0 0 16px rgba(230,57,70,0.35)',
         }}>IP</div>
 
         {([
@@ -90,15 +94,31 @@ export default function Dashboard() {
           { icon: '📈', label: 'Historial', view: 'history'   },
           { icon: '⚙',  label: 'Config',    view: 'config'    },
         ] as { icon: string; label: string; view: ActiveView }[]).map(({ icon, label, view }) => (
-          <div key={label} title={label} onClick={() => setActiveView(view)} style={{
-            width: 36, height: 36, borderRadius: 8,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: activeView === view ? 'var(--red-bg)' : 'transparent',
-            color: activeView === view ? 'var(--red)' : 'var(--text-3)',
-            cursor: 'pointer', fontSize: 14,
-          }}>{icon}</div>
+          <div
+            key={label}
+            className="nav-tip"
+            data-label={label}
+            onClick={() => setActiveView(view)}
+            style={{
+              width: 38, height: 38, borderRadius: 8,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              background: activeView === view ? 'var(--red-bg)' : 'transparent',
+              color: activeView === view ? 'var(--red)' : 'var(--text-3)',
+              cursor: 'pointer', fontSize: 15,
+              transition: 'background 0.15s, color 0.15s',
+              borderLeft: activeView === view ? '2px solid var(--red)' : '2px solid transparent',
+            }}
+          >{icon}</div>
         ))}
 
+        {/* Alert dot indicator */}
+        {alerts.length > 0 && (
+          <div style={{
+            marginTop: 'auto', marginBottom: 8,
+            width: 8, height: 8, borderRadius: '50%',
+            background: 'var(--red)', animation: 'pulse 1.5s infinite',
+          }} />
+        )}
       </nav>
 
       {/* Main */}
@@ -134,8 +154,8 @@ export default function Dashboard() {
           }}>
             {connected ? `● ${sensors.length} ONLINE` : '○ RECONECTANDO'}
           </span>
-          <span style={{ color: 'var(--text-3)', fontSize: 11, fontVariantNumeric: 'tabular-nums' }}>
-            {formatTime(now)} — {formatDate(now)}
+          <span style={{ fontFamily: 'var(--font-mono)', color: 'var(--text-3)', fontSize: 11 }}>
+            {formatTime(now)} <span style={{ color: 'var(--text-4)' }}>·</span> {formatDate(now)}
           </span>
         </header>
 
@@ -143,7 +163,20 @@ export default function Dashboard() {
         <div style={{ flex: 1, overflowY: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
           {alerts.length > 0 && <AlertBar alerts={alerts} sensors={sensors} />}
 
-          {activeView === 'dashboard' && (<>
+          {activeView === 'dashboard' && sensors.length === 0 && (
+            <>
+              <div style={{ color: 'var(--text-3)', fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: 600 }}>
+                Conectando…
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+                {Array.from({ length: 11 }).map((_, i) => (
+                  <div key={i} className="skeleton" style={{ height: 112, border: '1px solid var(--border)', borderRadius: 8 }} />
+                ))}
+              </div>
+            </>
+          )}
+
+          {activeView === 'dashboard' && sensors.length > 0 && (<>
             <div style={{ color: 'var(--text-3)', fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: 600 }}>
               Sensores en tiempo real
             </div>

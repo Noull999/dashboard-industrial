@@ -139,8 +139,8 @@ export default function SensorsView({ sensors, readings, lastSeen, onSelect }: P
             </div>
 
             {/* Value */}
-            <div style={{ fontVariantNumeric: 'tabular-nums' }}>
-              <span style={{ fontSize: 16, fontWeight: 700, color: isOffline ? '#555' : STATUS_COLOR[status] }}>
+            <div>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 16, fontWeight: 700, color: isOffline ? '#555' : STATUS_COLOR[status] }}>
                 {reading ? reading.value.toFixed(1) : '—'}
               </span>
               <span style={{ fontSize: 10, color: 'var(--text-3)', marginLeft: 3 }}>{s.unit}</span>

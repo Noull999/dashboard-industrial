@@ -1,20 +1,34 @@
 import { useState } from 'react';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ReferenceLine, ResponsiveContainer } from 'recharts';
 import { useSensorHistory } from '../hooks/useSensorHistory';
-import type { SensorMeta } from '../types';
+import type { SensorMeta, SensorReading } from '../types';
+import { getSensorStatus } from '../types';
 import type { HistoryRange } from '../hooks/useSensorHistory';
 
-interface Props { sensor: SensorMeta; }
+interface Props {
+  sensor: SensorMeta;
+  reading?: SensorReading | null;
+}
 
 const RANGES: HistoryRange[] = ['30m', '1h', '6h', '24h'];
+
+const STATUS_COLOR = {
+  normal:  'var(--green)',
+  warning: 'var(--yellow)',
+  alert:   'var(--red)',
+  offline: '#555',
+};
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
 }
 
-export default function SensorChart({ sensor }: Props) {
+export default function SensorChart({ sensor, reading }: Props) {
   const [range, setRange] = useState<HistoryRange>('1h');
   const { data, loading, error } = useSensorHistory(sensor.id, range);
+
+  const status = reading ? getSensorStatus(reading.value, sensor.min_val, sensor.max_val) : 'offline';
+  const lineColor = STATUS_COLOR[status];
 
   return (
     <div>
@@ -42,16 +56,16 @@ export default function SensorChart({ sensor }: Props) {
         {!loading && data.length > 0 && (
           <ResponsiveContainer width="100%" height={100}>
             <LineChart data={data.map(d => ({ ...d, time: formatTime(d.timestamp) }))}>
-              <XAxis dataKey="time" tick={{ fill: '#444', fontSize: 8 }} interval="preserveStartEnd" />
-              <YAxis tick={{ fill: '#444', fontSize: 8 }} width={35} />
+              <XAxis dataKey="time" tick={{ fill: '#444', fontSize: 8, fontFamily: 'var(--font-mono)' }} interval="preserveStartEnd" />
+              <YAxis tick={{ fill: '#444', fontSize: 8, fontFamily: 'var(--font-mono)' }} width={35} />
               <Tooltip
                 contentStyle={{ background: '#0d0d0d', border: '1px solid #333', borderRadius: 4, fontSize: 11 }}
                 labelStyle={{ color: '#888' }}
-                itemStyle={{ color: '#fff' }}
+                itemStyle={{ color: '#fff', fontFamily: 'var(--font-mono)' }}
               />
               <ReferenceLine y={sensor.min_val} stroke="#7f1d1d" strokeDasharray="4 4" />
               <ReferenceLine y={sensor.max_val} stroke="#7f1d1d" strokeDasharray="4 4" />
-              <Line type="monotone" dataKey="value" stroke="var(--red)" dot={false} strokeWidth={2} />
+              <Line type="monotone" dataKey="value" stroke={lineColor} dot={false} strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
         )}

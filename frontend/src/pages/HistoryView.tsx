@@ -35,10 +35,17 @@ export default function HistoryView({ sensors, readings, lastSeen }: Props) {
   const [selectedId, setSelectedId] = useState<string>(sensors[0]?.id ?? '');
   const [range, setRange] = useState<HistoryRange>('1h');
 
-  const sensor = sensors.find(s => s.id === selectedId) ?? null;
-  const { data, loading, error } = useSensorHistory(selectedId || null, range);
-
   const now = Date.now();
+
+  const sensor = sensors.find(s => s.id === selectedId) ?? null;
+  const currentReading = readings[selectedId] ?? null;
+  const currentSeen = lastSeen[selectedId] ?? null;
+  const currentStatus = !currentReading || (currentSeen !== null && now - currentSeen > 15000)
+    ? 'offline'
+    : getSensorStatus(currentReading.value, sensor?.min_val ?? 0, sensor?.max_val ?? 100);
+  const chartLineColor = STATUS_COLOR[currentStatus] ?? 'var(--red)';
+
+  const { data, loading, error } = useSensorHistory(selectedId || null, range);
 
   const stats = useMemo(() => {
     if (!data.length) return null;
@@ -145,9 +152,9 @@ export default function HistoryView({ sensors, readings, lastSeen }: Props) {
                   <div style={{ fontSize: 9, color: 'var(--text-3)', letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>
                     {label}
                   </div>
-                  <div style={{ fontSize: 20, fontWeight: 700, fontVariantNumeric: 'tabular-nums' }}>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 20, fontWeight: 700 }}>
                     {value}
-                    <span style={{ fontSize: 11, color: 'var(--text-3)', marginLeft: 3 }}>{unit}</span>
+                    <span style={{ fontSize: 11, color: 'var(--text-3)', marginLeft: 3, fontFamily: 'var(--font-ui)' }}>{unit}</span>
                   </div>
                 </div>
               ))}
@@ -202,8 +209,8 @@ export default function HistoryView({ sensors, readings, lastSeen }: Props) {
                   <ReferenceLine y={sensor.max_val} stroke="#7f1d1d" strokeDasharray="4 4" strokeWidth={1} label={{ value: `máx ${sensor.max_val}`, fill: '#7f1d1d', fontSize: 9, position: 'insideBottomRight' }} />
                   <Line
                     type="monotone" dataKey="value"
-                    stroke="var(--red)" dot={false} strokeWidth={2}
-                    activeDot={{ r: 4, fill: 'var(--red)', strokeWidth: 0 }}
+                    stroke={chartLineColor} dot={false} strokeWidth={2}
+                    activeDot={{ r: 4, fill: chartLineColor, strokeWidth: 0 }}
                   />
                 </LineChart>
               </ResponsiveContainer>

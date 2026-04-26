@@ -94,7 +94,7 @@ export default function SensorDrawer({ sensor, reading, onClose }: Props) {
 
         {/* Main value */}
         <div style={{ marginTop: 16, display: 'flex', alignItems: 'baseline', gap: 8 }}>
-          <span style={{ fontSize: 52, fontWeight: 800, color, letterSpacing: -2, lineHeight: 1 }}>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 52, fontWeight: 700, color, letterSpacing: -2, lineHeight: 1 }}>
             {reading ? reading.value.toFixed(1) : '—'}
           </span>
           <span style={{ fontSize: 22, color: 'var(--text-3)' }}>{sensor.unit}</span>
@@ -121,13 +121,13 @@ export default function SensorDrawer({ sensor, reading, onClose }: Props) {
             ].map(({ label, value, color: c }) => (
               <div key={label} style={{ background: 'var(--surface)', padding: '12px', textAlign: 'center' }}>
                 <div style={{ color: 'var(--text-3)', fontSize: 9, letterSpacing: 1, textTransform: 'uppercase', marginBottom: 6 }}>{label}</div>
-                <div style={{ fontSize: 18, fontWeight: 700, color: c }}>{value}</div>
+                <div style={{ fontFamily: 'var(--font-mono)', fontSize: 18, fontWeight: 700, color: c }}>{value}</div>
               </div>
             ))}
           </div>
         )}
 
-        <SensorChart sensor={sensor} />
+        <SensorChart sensor={sensor} reading={reading} />
 
         {sensor.is_production_line && <ProductSelector sensorId={sensor.id} sensorName={sensor.name} />}
 
