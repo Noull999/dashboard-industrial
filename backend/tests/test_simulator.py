@@ -38,3 +38,28 @@ def test_check_and_save_alert_below_min(db):
 def test_check_and_save_alert_in_range_returns_none(db):
     alert = check_and_save_alert(db, TEMP_SENSOR.id, -7.0, TEMP_SENSOR.min_val, TEMP_SENSOR.max_val, TEMP_SENSOR.name)
     assert alert is None
+
+
+def test_check_and_save_alert_deduplication(db):
+    check_and_save_alert(db, TEMP_SENSOR.id, -1.0, TEMP_SENSOR.min_val, TEMP_SENSOR.max_val, TEMP_SENSOR.name)
+    result = check_and_save_alert(db, TEMP_SENSOR.id, -1.0, TEMP_SENSOR.min_val, TEMP_SENSOR.max_val, TEMP_SENSOR.name)
+    assert result is None
+    from models import Alert
+    count = db.query(Alert).filter_by(sensor_id=TEMP_SENSOR.id).count()
+    assert count == 1
+
+
+def test_check_and_save_alert_auto_resolves(db):
+    from models import Alert
+    check_and_save_alert(db, TEMP_SENSOR.id, -1.0, TEMP_SENSOR.min_val, TEMP_SENSOR.max_val, TEMP_SENSOR.name)
+    check_and_save_alert(db, TEMP_SENSOR.id, -7.0, TEMP_SENSOR.min_val, TEMP_SENSOR.max_val, TEMP_SENSOR.name)
+    alert = db.query(Alert).filter_by(sensor_id=TEMP_SENSOR.id).first()
+    assert alert.resolved_at is not None
+
+
+def test_check_and_save_alert_new_after_resolution(db):
+    first = check_and_save_alert(db, TEMP_SENSOR.id, -1.0, TEMP_SENSOR.min_val, TEMP_SENSOR.max_val, TEMP_SENSOR.name)
+    check_and_save_alert(db, TEMP_SENSOR.id, -7.0, TEMP_SENSOR.min_val, TEMP_SENSOR.max_val, TEMP_SENSOR.name)
+    second = check_and_save_alert(db, TEMP_SENSOR.id, -1.0, TEMP_SENSOR.min_val, TEMP_SENSOR.max_val, TEMP_SENSOR.name)
+    assert second is not None
+    assert second.id != first.id

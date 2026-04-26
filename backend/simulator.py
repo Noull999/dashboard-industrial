@@ -29,7 +29,26 @@ def check_and_save_alert(
     elif value > max_val:
         msg = f"{sensor_name}: {value} por encima del máximo ({max_val})"
     else:
+        # Back in range — auto-resolve any open alert for this sensor.
+        open_alert = (
+            db.query(Alert)
+            .filter(Alert.sensor_id == sensor_id, Alert.resolved_at.is_(None))
+            .first()
+        )
+        if open_alert is not None:
+            open_alert.resolved_at = datetime.now(timezone.utc)
+            db.commit()
         return None
+
+    # Out of range — skip if there's already an open alert (no duplicates).
+    existing = (
+        db.query(Alert)
+        .filter(Alert.sensor_id == sensor_id, Alert.resolved_at.is_(None))
+        .first()
+    )
+    if existing is not None:
+        return None
+
     alert = Alert(sensor_id=sensor_id, value=value, message=msg, triggered_at=datetime.now(timezone.utc))
     db.add(alert)
     db.commit()

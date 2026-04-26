@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import type { SensorMeta } from '../types';
 
-const API = 'http://localhost:8000';
+const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
 const ACCESS_PIN = '1234'; // reemplazar con auth real cuando se implemente
 
 interface EditState {

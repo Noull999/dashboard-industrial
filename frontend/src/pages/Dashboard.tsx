@@ -12,12 +12,13 @@ import ConfigView from './ConfigView';
 
 type ActiveView = 'dashboard' | 'sensors' | 'alerts' | 'history' | 'config';
 
-const API = 'http://localhost:8000';
+const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
 
 export default function Dashboard() {
   const [sensors, setSensors] = useState<SensorMeta[]>([]);
   const [readings, setReadings] = useState<Record<string, SensorReading>>({});
   const [lastSeen, setLastSeen] = useState<Record<string, number>>({});
+  const [sensorHistories, setSensorHistories] = useState<Record<string, number[]>>({});
   const [alerts, setAlerts] = useState<ActiveAlert[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [activeView, setActiveView] = useState<ActiveView>('dashboard');
@@ -44,6 +45,10 @@ export default function Dashboard() {
   const handleMessage = useCallback((reading: SensorReading) => {
     setReadings(prev => ({ ...prev, [reading.sensor_id]: reading }));
     setLastSeen(prev => ({ ...prev, [reading.sensor_id]: Date.now() }));
+    setSensorHistories(prev => {
+      const current = prev[reading.sensor_id] ?? [];
+      return { ...prev, [reading.sensor_id]: [...current, reading.value].slice(-20) };
+    });
     if (reading.alert) {
       fetch(`${API}/alerts`).then(r => r.json()).then(setAlerts);
     }
@@ -51,6 +56,14 @@ export default function Dashboard() {
 
   const { connected } = useWebSocket(handleMessage);
   const selectedSensor = sensors.find(s => s.id === selectedId) ?? null;
+
+  const viewLabels: Record<ActiveView, string> = {
+    dashboard: 'Dashboard',
+    sensors:   'Sensores',
+    alerts:    'Alertas',
+    history:   'Historial',
+    config:    'Configuración',
+  };
 
   const formatDate = (d: Date) =>
     d.toLocaleDateString('es-AR', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
@@ -86,12 +99,6 @@ export default function Dashboard() {
           }}>{icon}</div>
         ))}
 
-        <div style={{ flex: 1 }} />
-        <div title="Config" style={{
-          width: 36, height: 36, borderRadius: 8,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          color: 'var(--text-3)', cursor: 'pointer',
-        }}>⚙</div>
       </nav>
 
       {/* Main */}
@@ -105,8 +112,9 @@ export default function Dashboard() {
             <span style={{ fontWeight: 600, letterSpacing: 0.5, textTransform: 'uppercase' }}>
               Planta Pesquera
             </span>
-            <span style={{ color: 'var(--text-3)', fontSize: 11, marginLeft: 4 }}>
-              — Puerto Madryn, Sector A
+            <span style={{ color: 'var(--text-3)', fontSize: 11, marginLeft: 6 }}>/</span>
+            <span style={{ color: 'var(--text-2)', fontSize: 13, marginLeft: 6 }}>
+              {viewLabels[activeView]}
             </span>
           </div>
           <div style={{ flex: 1 }} />
@@ -147,6 +155,7 @@ export default function Dashboard() {
                   meta={sensor}
                   reading={readings[sensor.id] ?? null}
                   lastSeen={lastSeen[sensor.id] ?? null}
+                  history={sensorHistories[sensor.id] ?? []}
                   onClick={() => setSelectedId(sensor.id)}
                 />
               ))}
@@ -163,6 +172,7 @@ export default function Dashboard() {
                   meta={sensor}
                   reading={readings[sensor.id] ?? null}
                   lastSeen={lastSeen[sensor.id] ?? null}
+                  history={sensorHistories[sensor.id] ?? []}
                   onClick={() => setSelectedId(sensor.id)}
                 />
               ))}

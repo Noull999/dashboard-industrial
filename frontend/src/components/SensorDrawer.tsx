@@ -18,7 +18,7 @@ interface SensorEvent {
   resolved: boolean;
 }
 
-const API = 'http://localhost:8000';
+const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
 const STATUS_COLOR = { normal: 'var(--green)', warning: 'var(--yellow)', alert: 'var(--red)', offline: '#555' };
 const STATUS_LABEL = { normal: 'NORMAL', warning: 'ATENCIÓN', alert: 'ALERTA', offline: 'OFFLINE' };
 

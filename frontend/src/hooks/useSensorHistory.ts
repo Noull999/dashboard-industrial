@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import type { HistoryPoint } from '../types';
 
-const API = 'http://localhost:8000';
+const API = import.meta.env.VITE_API_URL ?? 'http://localhost:8000';
 
 export type HistoryRange = '30m' | '1h' | '6h' | '24h';
 

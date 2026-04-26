@@ -5,6 +5,7 @@ interface Props {
   meta: SensorMeta;
   reading: SensorReading | null;
   lastSeen: number | null;
+  history: number[];
   onClick: () => void;
 }
 
@@ -22,7 +23,29 @@ const STATUS_LABELS: Record<SensorStatus | 'offline', string> = {
   offline: '○ OFFLINE',
 };
 
-export default function SensorCard({ meta, reading, lastSeen, onClick }: Props) {
+function Sparkline({ values, color, minVal, maxVal }: { values: number[]; color: string; minVal: number; maxVal: number }) {
+  if (values.length < 2) return <div style={{ height: 28 }} />;
+  const W = 100;
+  const H = 28;
+  const range = maxVal - minVal || 1;
+  const pts = values.map((v, i) => {
+    const x = (i / (values.length - 1)) * W;
+    const y = H - ((v - minVal) / range) * (H - 4) - 2;
+    return `${x.toFixed(1)},${Math.max(0, Math.min(H, y)).toFixed(1)}`;
+  }).join(' ');
+
+  return (
+    <svg
+      viewBox={`0 0 ${W} ${H}`}
+      preserveAspectRatio="none"
+      style={{ width: '100%', height: 28, display: 'block', opacity: 0.7 }}
+    >
+      <polyline points={pts} fill="none" stroke={color} strokeWidth="1.5" strokeLinejoin="round" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export default function SensorCard({ meta, reading, lastSeen, history, onClick }: Props) {
   const now = Date.now();
   const isOffline = !reading || (lastSeen !== null && now - lastSeen > 15000);
   const status: SensorStatus | 'offline' = isOffline
@@ -35,7 +58,7 @@ export default function SensorCard({ meta, reading, lastSeen, onClick }: Props) 
       background: status === 'alert' ? '#0d0808' : 'var(--surface)',
       border: `1px solid ${status === 'alert' ? 'var(--red-dim)' : 'var(--border)'}`,
       borderRadius: 8,
-      padding: '14px 16px',
+      padding: '14px 16px 10px',
       cursor: 'pointer',
       position: 'relative',
       overflow: 'hidden',
@@ -52,9 +75,11 @@ export default function SensorCard({ meta, reading, lastSeen, onClick }: Props) 
         <span style={{ fontSize: 13, color: 'var(--text-3)', fontWeight: 400, marginLeft: 4 }}>{meta.unit}</span>
       </div>
 
-      <div style={{ marginTop: 8, fontSize: 9, fontWeight: 700, color, letterSpacing: 0.5 }}>
+      <div style={{ marginTop: 8, marginBottom: 6, fontSize: 9, fontWeight: 700, color, letterSpacing: 0.5 }}>
         {STATUS_LABELS[status]}
       </div>
+
+      <Sparkline values={history} color={color} minVal={meta.min_val} maxVal={meta.max_val} />
     </div>
   );
 }

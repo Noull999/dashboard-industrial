@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import type { SensorReading } from '../types';
 
-const WS_URL = 'ws://localhost:8000/ws';
+const WS_URL = import.meta.env.VITE_WS_URL ?? 'ws://localhost:8000/ws';
 
 export function useWebSocket(onMessage: (reading: SensorReading) => void) {
   const [connected, setConnected] = useState(false);
