@@ -5,6 +5,9 @@ import SensorCard from '../components/SensorCard';
 import AlertBar from '../components/AlertBar';
 import SensorDrawer from '../components/SensorDrawer';
 import ProductionTotal from '../components/ProductionTotal';
+import SensorsView from './SensorsView';
+
+type ActiveView = 'dashboard' | 'sensors';
 
 const API = 'http://localhost:8000';
 
@@ -14,6 +17,7 @@ export default function Dashboard() {
   const [lastSeen, setLastSeen] = useState<Record<string, number>>({});
   const [alerts, setAlerts] = useState<ActiveAlert[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [activeView, setActiveView] = useState<ActiveView>('dashboard');
   const [now, setNow] = useState(() => new Date());
   const alertTimer = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
@@ -59,18 +63,26 @@ export default function Dashboard() {
           fontWeight: 900, fontSize: 14, marginBottom: 16,
         }}>IP</div>
 
-        {[
-          { icon: '⊞', label: 'Dashboard', active: true },
-          { icon: '〜', label: 'Sensores' },
-          { icon: '🔔', label: 'Alertas' },
-          { icon: '📈', label: 'Historial' },
-        ].map(({ icon, label, active }) => (
-          <div key={label} title={label} style={{
+        {([
+          { icon: '⊞', label: 'Dashboard', view: 'dashboard' },
+          { icon: '〜', label: 'Sensores',  view: 'sensors'   },
+        ] as { icon: string; label: string; view: ActiveView }[]).map(({ icon, label, view }) => (
+          <div key={label} title={label} onClick={() => setActiveView(view)} style={{
             width: 36, height: 36, borderRadius: 8,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: active ? 'var(--red-bg)' : 'transparent',
-            color: active ? 'var(--red)' : 'var(--text-3)',
+            background: activeView === view ? 'var(--red-bg)' : 'transparent',
+            color: activeView === view ? 'var(--red)' : 'var(--text-3)',
             cursor: 'pointer', fontSize: 14,
+          }}>{icon}</div>
+        ))}
+        {[
+          { icon: '🔔', label: 'Alertas'   },
+          { icon: '📈', label: 'Historial' },
+        ].map(({ icon, label }) => (
+          <div key={label} title={`${label} (próximamente)`} style={{
+            width: 36, height: 36, borderRadius: 8,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#333', cursor: 'not-allowed', fontSize: 14,
           }}>{icon}</div>
         ))}
 
@@ -123,38 +135,49 @@ export default function Dashboard() {
         <div style={{ flex: 1, overflowY: 'auto', padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
           {alerts.length > 0 && <AlertBar alerts={alerts} sensors={sensors} />}
 
-          <div style={{ color: 'var(--text-3)', fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: 600 }}>
-            Sensores en tiempo real
-          </div>
+          {activeView === 'dashboard' && (<>
+            <div style={{ color: 'var(--text-3)', fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: 600 }}>
+              Sensores en tiempo real
+            </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
-            {sensors.filter(s => !s.is_production_line).map(sensor => (
-              <SensorCard
-                key={sensor.id}
-                meta={sensor}
-                reading={readings[sensor.id] ?? null}
-                lastSeen={lastSeen[sensor.id] ?? null}
-                onClick={() => setSelectedId(sensor.id)}
-              />
-            ))}
-          </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+              {sensors.filter(s => !s.is_production_line).map(sensor => (
+                <SensorCard
+                  key={sensor.id}
+                  meta={sensor}
+                  reading={readings[sensor.id] ?? null}
+                  lastSeen={lastSeen[sensor.id] ?? null}
+                  onClick={() => setSelectedId(sensor.id)}
+                />
+              ))}
+            </div>
 
-          <div style={{ color: 'var(--text-3)', fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: 600 }}>
-            Líneas de producción
-          </div>
+            <div style={{ color: 'var(--text-3)', fontSize: 9, letterSpacing: 1.5, textTransform: 'uppercase', fontWeight: 600 }}>
+              Líneas de producción
+            </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
-            {sensors.filter(s => s.is_production_line).map(sensor => (
-              <SensorCard
-                key={sensor.id}
-                meta={sensor}
-                reading={readings[sensor.id] ?? null}
-                lastSeen={lastSeen[sensor.id] ?? null}
-                onClick={() => setSelectedId(sensor.id)}
-              />
-            ))}
-            <ProductionTotal />
-          </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+              {sensors.filter(s => s.is_production_line).map(sensor => (
+                <SensorCard
+                  key={sensor.id}
+                  meta={sensor}
+                  reading={readings[sensor.id] ?? null}
+                  lastSeen={lastSeen[sensor.id] ?? null}
+                  onClick={() => setSelectedId(sensor.id)}
+                />
+              ))}
+              <ProductionTotal />
+            </div>
+          </>)}
+
+          {activeView === 'sensors' && (
+            <SensorsView
+              sensors={sensors}
+              readings={readings}
+              lastSeen={lastSeen}
+              onSelect={id => { setSelectedId(id); setActiveView('dashboard'); }}
+            />
+          )}
         </div>
       </div>
 
