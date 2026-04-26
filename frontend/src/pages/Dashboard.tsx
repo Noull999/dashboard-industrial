@@ -6,8 +6,9 @@ import AlertBar from '../components/AlertBar';
 import SensorDrawer from '../components/SensorDrawer';
 import ProductionTotal from '../components/ProductionTotal';
 import SensorsView from './SensorsView';
+import AlertsView from './AlertsView';
 
-type ActiveView = 'dashboard' | 'sensors';
+type ActiveView = 'dashboard' | 'sensors' | 'alerts';
 
 const API = 'http://localhost:8000';
 
@@ -66,6 +67,7 @@ export default function Dashboard() {
         {([
           { icon: '⊞', label: 'Dashboard', view: 'dashboard' },
           { icon: '〜', label: 'Sensores',  view: 'sensors'   },
+          { icon: '🔔', label: 'Alertas',   view: 'alerts'    },
         ] as { icon: string; label: string; view: ActiveView }[]).map(({ icon, label, view }) => (
           <div key={label} title={label} onClick={() => setActiveView(view)} style={{
             width: 36, height: 36, borderRadius: 8,
@@ -75,16 +77,11 @@ export default function Dashboard() {
             cursor: 'pointer', fontSize: 14,
           }}>{icon}</div>
         ))}
-        {[
-          { icon: '🔔', label: 'Alertas'   },
-          { icon: '📈', label: 'Historial' },
-        ].map(({ icon, label }) => (
-          <div key={label} title={`${label} (próximamente)`} style={{
-            width: 36, height: 36, borderRadius: 8,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: '#333', cursor: 'not-allowed', fontSize: 14,
-          }}>{icon}</div>
-        ))}
+        <div title="Historial (próximamente)" style={{
+          width: 36, height: 36, borderRadius: 8,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: '#333', cursor: 'not-allowed', fontSize: 14,
+        }}>📈</div>
 
         <div style={{ flex: 1 }} />
         <div title="Config" style={{
@@ -176,6 +173,13 @@ export default function Dashboard() {
               readings={readings}
               lastSeen={lastSeen}
               onSelect={id => { setSelectedId(id); setActiveView('dashboard'); }}
+            />
+          )}
+
+          {activeView === 'alerts' && (
+            <AlertsView
+              sensors={sensors}
+              onSelectSensor={id => { setSelectedId(id); setActiveView('dashboard'); }}
             />
           )}
         </div>

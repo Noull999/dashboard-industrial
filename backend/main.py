@@ -179,6 +179,25 @@ def get_all_production_today(db: Session = Depends(get_db)):
     return {"lines": result, "grand_total_kg": round(grand_total_kg, 2)}
 
 
+@app.get("/alerts/history")
+def get_alerts_history(limit: int = 50, db: Session = Depends(get_db)):
+    rows = (
+        db.query(Alert)
+        .order_by(Alert.triggered_at.desc())
+        .limit(limit)
+        .all()
+    )
+    return [
+        {
+            "id": a.id, "sensor_id": a.sensor_id, "value": a.value,
+            "message": a.message,
+            "triggered_at": a.triggered_at.isoformat(),
+            "resolved_at": a.resolved_at.isoformat() if a.resolved_at else None,
+        }
+        for a in rows
+    ]
+
+
 @app.get("/sensors/{sensor_id}/events")
 def get_sensor_events(sensor_id: str, db: Session = Depends(get_db)):
     rows = (
