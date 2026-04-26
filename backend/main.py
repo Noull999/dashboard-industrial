@@ -115,6 +115,35 @@ def get_alerts(db: Session = Depends(get_db)):
     ]
 
 
+class SensorUpdateBody(BaseModel):
+    name: str | None = None
+    min_val: float | None = None
+    max_val: float | None = None
+    location: str | None = None
+
+
+@app.patch("/sensors/{sensor_id}")
+def update_sensor(sensor_id: str, body: SensorUpdateBody, db: Session = Depends(get_db)):
+    sensor = db.get(Sensor, sensor_id)
+    if not sensor:
+        raise HTTPException(status_code=404, detail="Sensor not found")
+    if body.name is not None:
+        sensor.name = body.name
+    if body.min_val is not None:
+        sensor.min_val = body.min_val
+    if body.max_val is not None:
+        sensor.max_val = body.max_val
+    if body.location is not None:
+        sensor.location = body.location
+    db.commit()
+    return {
+        "id": sensor.id, "name": sensor.name, "unit": sensor.unit,
+        "min_val": sensor.min_val, "max_val": sensor.max_val,
+        "location": sensor.location, "sensor_type": sensor.sensor_type,
+        "is_production_line": sensor.is_production_line == "true",
+    }
+
+
 class ProductBody(BaseModel):
     product_name: str
 

@@ -8,8 +8,9 @@ import ProductionTotal from '../components/ProductionTotal';
 import SensorsView from './SensorsView';
 import AlertsView from './AlertsView';
 import HistoryView from './HistoryView';
+import ConfigView from './ConfigView';
 
-type ActiveView = 'dashboard' | 'sensors' | 'alerts' | 'history';
+type ActiveView = 'dashboard' | 'sensors' | 'alerts' | 'history' | 'config';
 
 const API = 'http://localhost:8000';
 
@@ -23,8 +24,12 @@ export default function Dashboard() {
   const [now, setNow] = useState(() => new Date());
   const alertTimer = useRef<ReturnType<typeof setInterval> | undefined>(undefined);
 
-  useEffect(() => {
+  const reloadSensors = useCallback(() => {
     fetch(`${API}/sensors`).then(r => r.json()).then(setSensors);
+  }, []);
+
+  useEffect(() => {
+    reloadSensors();
     fetch(`${API}/alerts`).then(r => r.json()).then(setAlerts);
     alertTimer.current = setInterval(() => {
       fetch(`${API}/alerts`).then(r => r.json()).then(setAlerts);
@@ -70,6 +75,7 @@ export default function Dashboard() {
           { icon: '〜', label: 'Sensores',  view: 'sensors'   },
           { icon: '🔔', label: 'Alertas',   view: 'alerts'    },
           { icon: '📈', label: 'Historial', view: 'history'   },
+          { icon: '⚙',  label: 'Config',    view: 'config'    },
         ] as { icon: string; label: string; view: ActiveView }[]).map(({ icon, label, view }) => (
           <div key={label} title={label} onClick={() => setActiveView(view)} style={{
             width: 36, height: 36, borderRadius: 8,
@@ -185,6 +191,13 @@ export default function Dashboard() {
               sensors={sensors}
               readings={readings}
               lastSeen={lastSeen}
+            />
+          )}
+
+          {activeView === 'config' && (
+            <ConfigView
+              sensors={sensors}
+              onSensorsUpdated={reloadSensors}
             />
           )}
         </div>
